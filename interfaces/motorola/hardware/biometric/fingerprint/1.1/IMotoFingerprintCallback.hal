@@ -1,0 +1,6 @@
+package com.motorola.hardware.biometric.fingerprint@1.1;
+
+interface IMotoFingerprintCallback {
+    oneway onDaemonMessage(int64_t timestamp, int32_t msgType, int32_t subType, vec<int8_t> payload);
+    oneway ipc_callback(int32_t type, int32_t arg1, int32_t arg2, vec<uint8_t> data, int32_t flags);
+};

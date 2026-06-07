@@ -1,0 +1,10 @@
+package com.motorola.hardware.biometric.fingerprint@1.1;
+
+import com.motorola.hardware.biometric.fingerprint@1.0::IMotoFingerPrint;
+import com.motorola.hardware.biometric.fingerprint@1.1::IMotoFingerprintCallback;
+
+interface IMotoFingerPrint extends @1.0::IMotoFingerPrint {
+    setNotify(IMotoFingerprintCallback callback);
+    sendCommand(int32_t commandId, vec<int8_t> data) generates (int32_t status, vec<int8_t> outData);
+    cancel();
+};
