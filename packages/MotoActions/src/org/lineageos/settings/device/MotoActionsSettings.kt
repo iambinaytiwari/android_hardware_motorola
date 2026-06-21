@@ -10,6 +10,7 @@ import android.content.Context
 import android.hardware.display.AmbientDisplayConfiguration
 import android.os.UserHandle
 import android.provider.Settings
+import android.os.SystemProperties
 
 object MotoActionsSettings {
 
@@ -23,6 +24,21 @@ object MotoActionsSettings {
 
     const val DOZE_ENABLE = "doze_enable"
     const val ALWAYS_ON_DISPLAY = "always_on_display"
+
+    const val MODEL_NUMBER_KEY = "model_number"
+    const val MODEL_NUMBER_PROP = "ro.boot.hardware.sku"
+    const val CARRIER_KEY = "carrier"
+    const val CARRIER_PROP = "ro.boot.carrier"
+
+
+    private fun getStringProperty(context: Context, key: String): String =
+        SystemProperties.get(key, context.getString(R.string.unknown))
+
+    fun getModelNumberString(context: Context): String =
+        getStringProperty(context, MODEL_NUMBER_PROP)
+
+    fun getCarrierString(context: Context): String =
+        getStringProperty(context, CARRIER_PROP)
 
     fun isAlwaysOnEnabled(context: Context): Boolean =
         Settings.Secure.getIntForUser(
@@ -51,5 +67,9 @@ object MotoActionsSettings {
         )
 
     fun isDozeEnabled(context: Context): Boolean =
-        Settings.Secure.getInt(context.contentResolver, Settings.Secure.DOZE_ENABLED, 1) != 0
+        Settings.Secure.getInt(
+            context.contentResolver,
+            Settings.Secure.DOZE_ENABLED,
+            1,
+        ) != 0
 }
