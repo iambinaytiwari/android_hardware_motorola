@@ -14,6 +14,7 @@
 #include <hidl/Status.h>
 #include <log/log.h>
 #include "fingerprint.h"
+#include "UdfpsHandler.h"
 
 namespace android {
 namespace hardware {
@@ -76,6 +77,8 @@ struct BiometricsFingerprint : public IBiometricsFingerprint {
     std::mutex mClientCallbackMutex;
     sp<IBiometricsFingerprintClientCallback> mClientCallback;
     fingerprint_device_t* mDevice;
+    UdfpsHandlerFactory* mUdfpsHandlerFactory;
+    UdfpsHandler* mUdfpsHandler;
 };
 
 }  // namespace implementation

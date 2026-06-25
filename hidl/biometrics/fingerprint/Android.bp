@@ -15,6 +15,7 @@ cc_binary {
     srcs: [
         "BiometricsFingerprint.cpp",
         "service.cpp",
+        "UdfpsHandler.cpp",
     ],
 
     shared_libs: [
