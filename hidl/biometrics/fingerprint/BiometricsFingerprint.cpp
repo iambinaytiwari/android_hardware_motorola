@@ -106,8 +106,13 @@ FingerprintError BiometricsFingerprint::VendorErrorFilter(int32_t error, int32_t
     *vendorCode = 0;
     switch (error) {
         case FINGERPRINT_ERROR_HW_UNAVAILABLE:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 1:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 2:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 3:
             return FingerprintError::ERROR_HW_UNAVAILABLE;
         case FINGERPRINT_ERROR_UNABLE_TO_PROCESS:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 4:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 5:
             return FingerprintError::ERROR_UNABLE_TO_PROCESS;
         case FINGERPRINT_ERROR_TIMEOUT:
             return FingerprintError::ERROR_TIMEOUT;
@@ -147,7 +152,13 @@ FingerprintAcquiredInfo BiometricsFingerprint::VendorAcquiredFilter(int32_t info
         case FINGERPRINT_ACQUIRED_TOO_SLOW:
             return FingerprintAcquiredInfo::ACQUIRED_TOO_SLOW;
         case FINGERPRINT_ACQUIRED_TOO_FAST:
+        case FINGERPRINT_ACQUIRED_VENDOR_BASE + 8:
             return FingerprintAcquiredInfo::ACQUIRED_TOO_FAST;
+        case FINGERPRINT_ACQUIRED_VENDOR_BASE + 5:
+        case FINGERPRINT_ACQUIRED_VENDOR_BASE + 6:
+        case FINGERPRINT_ACQUIRED_VENDOR_BASE + 7:
+            *vendorCode = info - FINGERPRINT_ACQUIRED_VENDOR_BASE;
+            return FingerprintAcquiredInfo::ACQUIRED_VENDOR;
         default:
             if (info >= FINGERPRINT_ACQUIRED_VENDOR_BASE) {
                 // vendor specific code.
