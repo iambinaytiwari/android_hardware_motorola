@@ -15,7 +15,10 @@ cc_binary {
     srcs: [
         "BiometricsFingerprint.cpp",
         "service.cpp",
-        "UdfpsHandler.cpp",
+    ],
+
+    static_libs: [
+        "libudfpshandlerfactory.motorola",
     ],
 
     shared_libs: [
