@@ -264,7 +264,7 @@ prop {
     api_name: "lockout"
 }
 
-# whether support lockout based on the failed auth attempts (default: false)
+# whether support lockout based on the failed auth attempts (default: true)
 prop {
     prop_name: "persist.vendor.fingerprint.lockout_enable"
     type: Boolean

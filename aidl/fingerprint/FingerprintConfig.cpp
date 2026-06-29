@@ -96,7 +96,7 @@ static Config::Data configData[] = {
         {NGS(display_touch), &Config::parseBool, "true"},
         {NGS(control_illumination), &Config::parseBool, "false"},
         {NGS(lockout), &Config::parseBool, "false"},
-        {NGS(lockout_enable), &Config::parseBool, "false"},
+        {NGS(lockout_enable), &Config::parseBool, "true"},
         {NGS(lockout_timed_threshold), &Config::parseInt32, "5"},
         {NGS(lockout_timed_duration), &Config::parseInt32, "10000"},
         {NGS(lockout_permanent_threshold), &Config::parseInt32, "20"},
