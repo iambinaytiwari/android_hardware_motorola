@@ -21,7 +21,7 @@
 #include "util/CancellationSignal.h"
 
 #undef LOG_TAG
-#define LOG_TAG "FingerprintVirtualHalSession"
+#define LOG_TAG "FingerprintFakeSession"
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 

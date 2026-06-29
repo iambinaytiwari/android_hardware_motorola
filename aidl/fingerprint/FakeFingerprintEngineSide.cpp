@@ -23,7 +23,7 @@
 #include "util/CancellationSignal.h"
 #include "util/Util.h"
 
-using namespace ::android::fingerprint::virt;
+using namespace ::android::fingerprint::fake;
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 SensorLocation FakeFingerprintEngineSide::defaultLocation[] = {

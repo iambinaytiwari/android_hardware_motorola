@@ -25,9 +25,9 @@
 #include "util/Util.h"
 
 #undef LOG_TAG
-#define LOG_TAG "FingerprintVirtualHalUdfps"
+#define LOG_TAG "FingerprintFakeUdfps"
 
-using namespace ::android::fingerprint::virt;
+using namespace ::android::fingerprint::fake;
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 
