@@ -65,8 +65,6 @@ class FingerprintEngine {
 
     virtual void getSensorLocation(std::vector<SensorLocation>& loc);
 
-    virtual void getDefaultSensorLocation(std::vector<SensorLocation>&) {}
-
     virtual void fingerDownAction();
 
     int32_t getLatency(const std::vector<std::optional<std::int32_t>>& latencyVec);

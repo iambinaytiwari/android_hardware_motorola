@@ -25,10 +25,6 @@ namespace aidl::android::hardware::biometrics::fingerprint {
 // A fingerprint engine that is backed by system properties instead of hardware.
 class FingerprintEngineUdfps : public FingerprintEngine {
   public:
-    static constexpr int32_t defaultSensorLocationX = 400;
-    static constexpr int32_t defaultSensorLocationY = 1600;
-    static constexpr int32_t defaultSensorRadius = 150;
-
     static constexpr int32_t uiReadyTimeoutInMs = 5000;
 
     FingerprintEngineUdfps();
@@ -40,8 +36,6 @@ class FingerprintEngineUdfps : public FingerprintEngine {
     ndk::ScopedAStatus onPointerUpImpl(int32_t pointerId) override;
 
     ndk::ScopedAStatus onUiReadyImpl() override;
-
-    void getDefaultSensorLocation(std::vector<SensorLocation>& sensorLocation) override;
 
     void updateContext(WorkMode mode, ISessionCallback* cb, std::future<void>& cancel,
                        int64_t operationId, const keymaster::HardwareAuthToken& hat);

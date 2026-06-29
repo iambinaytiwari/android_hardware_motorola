@@ -457,7 +457,7 @@ bool FingerprintEngine::getSensorLocationConfig(std::vector<SensorLocation>& out
 
 void FingerprintEngine::getSensorLocation(std::vector<SensorLocation>& location) {
     if (!getSensorLocationConfig(location)) {
-        getDefaultSensorLocation(location);
+        LOG(FATAL) << "getSensorLocation: Failed to retrieve sensor location";
     }
 }
 
