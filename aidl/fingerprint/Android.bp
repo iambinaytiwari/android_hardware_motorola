@@ -1,24 +1,28 @@
-package {
-    default_team: "trendy_team_biometrics_framework",
-    // See: http://go/android-license-faq
-    // A large-scale-change added 'default_applicable_licenses' to import
-    // all of the 'license_kinds' from "hardware_interfaces_license"
-    // to get the below license kinds:
-    //   SPDX-license-identifier-Apache-2.0
-    default_applicable_licenses: ["hardware_interfaces_license"],
-}
+//
+// Copyright (C) 2020 The Android Open Source Project
+// Copyright (C) 2026 The LineageOS Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
 cc_library_static {
-    name: "android.hardware.biometrics.fingerprint-service.lib",
+    name: "android.hardware.biometrics.fingerprint-service.motorola.lib",
     vendor_available: true,
     local_include_dirs: ["include"],
     srcs: [
-        "FakeLockoutTracker.cpp",
-        "FakeFingerprintEngine.cpp",
-        "FakeFingerprintEngineRear.cpp",
-        "FakeFingerprintEngineUdfps.cpp",
-        "FakeFingerprintEngineUdfpsUltraSonic.cpp",
-        "FakeFingerprintEngineSide.cpp",
+        "LockoutTracker.cpp",
+        "FingerprintEngine.cpp",
+        "FingerprintEngineUdfps.cpp",
         "Fingerprint.cpp",
         "Session.cpp",
         "FingerprintConfig.cpp",
@@ -30,7 +34,7 @@ cc_library_static {
         "liblog",
     ],
     whole_static_libs: [
-        "libandroid.hardware.biometrics.fingerprint.FakeProps",
+        "libandroid.hardware.biometrics.fingerprint.MotorolaProps",
         "libbase",
         "android.hardware.biometrics.fingerprint-V4-ndk",
         "android.hardware.biometrics.common-V4-ndk",
@@ -42,12 +46,12 @@ cc_library_static {
 }
 
 cc_binary {
-    name: "android.hardware.biometrics.fingerprint-service.default",
+    name: "android.hardware.biometrics.fingerprint-service.motorola",
     //system_ext_specific: true,
     vendor: true,
     relative_install_path: "hw",
-    init_rc: ["fingerprint-default.rc"],
-    vintf_fragment_modules: ["android.hardware.biometrics.fingerprint-service.default.vintf"],
+    init_rc: ["fingerprint-motorola.rc"],
+    vintf_fragment_modules: ["android.hardware.biometrics.fingerprint-service.motorola.vintf"],
     local_include_dirs: ["include"],
     srcs: [
     ],
@@ -57,18 +61,18 @@ cc_binary {
         "liblog",
     ],
     whole_static_libs: [
-        "android.hardware.biometrics.fingerprint-service.lib",
+        "android.hardware.biometrics.fingerprint-service.motorola.lib",
     ],
 }
 
 vintf_fragment {
-    name: "android.hardware.biometrics.fingerprint-service.default.vintf",
-    src: "fingerprint-default.xml",
+    name: "android.hardware.biometrics.fingerprint-service.motorola.vintf",
+    src: "fingerprint-motorola.xml",
     vendor: true,
 }
 
 sysprop_library {
-    name: "android.hardware.biometrics.fingerprint.FakeProps",
+    name: "android.hardware.biometrics.fingerprint.MotorolaProps",
     srcs: ["fingerprint.sysprop"],
     property_owner: "Vendor",
     vendor: true,

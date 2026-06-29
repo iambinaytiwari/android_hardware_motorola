@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2026 The LineageOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +23,10 @@
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 
-class FakeLockoutTracker {
+class LockoutTracker {
   public:
-    FakeLockoutTracker() : mFailedCount(0), mFailedCountTimed(0) {}
-    ~FakeLockoutTracker() {}
+    LockoutTracker() : mFailedCount(0), mFailedCountTimed(0) {}
+    ~LockoutTracker() {}
 
     enum class LockoutMode : int8_t { kNone = 0, kTimed, kPermanent };
 
@@ -35,9 +36,9 @@ class FakeLockoutTracker {
     int64_t getLockoutTimeLeft();
     inline std::string toString() const {
         std::ostringstream os;
-        os << "----- FakeLockoutTracker:: -----" << std::endl;
-        os << "FakeLockoutTracker::mFailedCount:" << mFailedCount;
-        os << ", FakeLockoutTracker::mCurrentMode:" << (int)mCurrentMode;
+        os << "----- LockoutTracker:: -----" << std::endl;
+        os << "LockoutTracker::mFailedCount:" << mFailedCount;
+        os << ", LockoutTracker::mCurrentMode:" << (int)mCurrentMode;
         os << std::endl;
         return os.str();
     }

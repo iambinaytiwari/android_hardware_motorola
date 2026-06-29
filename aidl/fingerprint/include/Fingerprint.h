@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2026 The LineageOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +19,8 @@
 
 #include <aidl/android/hardware/biometrics/fingerprint/BnFingerprint.h>
 
-#include "FakeFingerprintEngine.h"
-#include "FakeFingerprintEngineRear.h"
-#include "FakeFingerprintEngineSide.h"
-#include "FakeFingerprintEngineUdfps.h"
-#include "FakeFingerprintEngineUdfpsUltraSonic.h"
+#include "FingerprintEngine.h"
+#include "FingerprintEngineUdfps.h"
 
 #include "FingerprintConfig.h"
 #include "Session.h"
@@ -51,7 +49,7 @@ class Fingerprint : public BnFingerprint {
     }
 
   private:
-    std::unique_ptr<FakeFingerprintEngine> mEngine;
+    std::unique_ptr<FingerprintEngine> mEngine;
     WorkerThread mWorker;
     std::shared_ptr<Session> mSession;
     FingerprintSensorType mSensorType;

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2026 The LineageOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +25,7 @@
 #include <android-base/logging.h>
 #include <android-base/stringprintf.h>
 
-using namespace ::android::fingerprint::fake;
+using namespace ::android::fingerprint::nothing;
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 namespace {
@@ -44,21 +45,12 @@ constexpr char SW_VERSION[] = "vendor/version/revision";
 
 Fingerprint::Fingerprint() : mWorker(MAX_WORKER_QUEUE_SIZE) {
     std::string sensorTypeProp = Fingerprint::cfg().get<std::string>("type");
-    if (sensorTypeProp == "" || sensorTypeProp == "default" || sensorTypeProp == "rear") {
-        mSensorType = FingerprintSensorType::REAR;
-        mEngine = std::make_unique<FakeFingerprintEngineRear>();
-    } else if (sensorTypeProp == "udfps") {
+    if (sensorTypeProp == "" || sensorTypeProp == "default" || sensorTypeProp == "udfps") {
         mSensorType = FingerprintSensorType::UNDER_DISPLAY_OPTICAL;
-        mEngine = std::make_unique<FakeFingerprintEngineUdfps>();
-    } else if (sensorTypeProp == "udfps-us") {
-        mSensorType = FingerprintSensorType::UNDER_DISPLAY_ULTRASONIC;
-        mEngine = std::make_unique<FakeFingerprintEngineUdfpsUltraSonic>();
-    } else if (sensorTypeProp == "side") {
-        mSensorType = FingerprintSensorType::POWER_BUTTON;
-        mEngine = std::make_unique<FakeFingerprintEngineSide>();
+        mEngine = std::make_unique<FingerprintEngineUdfps>();
     } else {
         mSensorType = FingerprintSensorType::UNKNOWN;
-        mEngine = std::make_unique<FakeFingerprintEngineRear>();
+        mEngine = NULL;
         UNIMPLEMENTED(FATAL) << "unrecognized or unimplemented fingerprint behavior: "
                              << sensorTypeProp;
     }

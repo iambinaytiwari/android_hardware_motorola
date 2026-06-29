@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2026 The LineageOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +23,7 @@
 
 #include <fingerprint.sysprop.h>
 
-using namespace ::android::fingerprint::fake;
+using namespace ::android::fingerprint::nothing;
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 
@@ -69,7 +70,7 @@ CREATE_GETTER_SETTER_WRAPPER(lockout_permanent_threshold, OptInt32)
 // Name, Getter, Setter, Parser and default value
 #define NGS(_NAME_) #_NAME_, _NAME_##Getter, _NAME_##Setter
 static Config::Data configData[] = {
-        {NGS(type), &Config::parseString, "rear"},
+        {NGS(type), &Config::parseString, "udfps"},
         {NGS(enrollments), &Config::parseIntVec, ""},
         {NGS(enrollment_hit), &Config::parseInt32, "0"},
         {NGS(next_enrollment), &Config::parseString, ""},

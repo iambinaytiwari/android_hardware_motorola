@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2026 The LineageOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +20,7 @@
 #include <aidl/android/hardware/biometrics/fingerprint/BnSession.h>
 #include <aidl/android/hardware/biometrics/fingerprint/ISessionCallback.h>
 
-#include "FakeFingerprintEngine.h"
+#include "FingerprintEngine.h"
 #include "thread/WorkerThread.h"
 
 namespace aidl::android::hardware::biometrics::fingerprint {
@@ -47,7 +48,7 @@ void onClientDeath(void* cookie);
 class Session : public BnSession {
   public:
     Session(int sensorId, int userId, std::shared_ptr<ISessionCallback> cb,
-            FakeFingerprintEngine* engine, WorkerThread* worker);
+            FingerprintEngine* engine, WorkerThread* worker);
 
     ndk::ScopedAStatus generateChallenge() override;
 
@@ -134,7 +135,7 @@ class Session : public BnSession {
     // life such modules typically consume a lot of memory and are slow to initialize. This is here
     // to showcase how such a module can be used within a Session without incurring the high
     // initialization costs every time a Session is constructed.
-    FakeFingerprintEngine* mEngine;
+    FingerprintEngine* mEngine;
 
     // Worker thread that allows to schedule tasks for asynchronous execution.
     WorkerThread* mWorker;

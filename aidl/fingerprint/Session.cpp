@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2026 The LineageOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +22,7 @@
 #include "util/CancellationSignal.h"
 
 #undef LOG_TAG
-#define LOG_TAG "FingerprintFakeSession"
+#define LOG_TAG "FingerprintMotorolaSession"
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 
@@ -34,7 +35,7 @@ void onClientDeath(void* cookie) {
 }
 
 Session::Session(int sensorId, int userId, std::shared_ptr<ISessionCallback> cb,
-                 FakeFingerprintEngine* engine, WorkerThread* worker)
+                 FingerprintEngine* engine, WorkerThread* worker)
     : mSensorId(sensorId),
       mUserId(userId),
       mCb(std::move(cb)),
