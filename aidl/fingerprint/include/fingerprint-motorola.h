@@ -155,8 +155,11 @@ typedef struct fingerprint_device {
      */
     int (*set_notify)(struct fingerprint_device* dev, fingerprint_notify_t notify);
 
-    /* Reserved for compatibility with binary */
-    void* reserved0;
+    /*
+     * Fingerprint pre-enroll request (pre_enroll):
+     * Returns a pre-enrollment challenge token.
+     */
+    uint64_t (*pre_enroll)(struct fingerprint_device* dev);
 
     /*
      * Fingerprint enroll request:
@@ -172,10 +175,20 @@ typedef struct fingerprint_device {
      *                  or a negative number in case of error, generally from the errno.h set.
      *                  A notify() function may be called indicating the error condition.
      */
-    int (*enroll)(struct fingerprint_device* dev, const hw_auth_token_t* hat);
+    int (*enroll)(struct fingerprint_device* dev, const hw_auth_token_t* hat,
+                  uint32_t gid, uint32_t timeout_sec);
 
-    /* Reserved for compatibility with binary */
-    void* reserved1[2];
+    /*
+     * Fingerprint post-enroll:
+     * Finishes the enrollment operation and invalidates the pre_enroll() challenge.
+     */
+    int (*post_enroll)(struct fingerprint_device* dev);
+
+    /*
+     * Get authenticator ID:
+     * Returns a token associated with the current fingerprint set.
+     */
+    uint64_t (*get_authenticator_id)(struct fingerprint_device* dev);
 
     /*
      * Cancel pending enroll or authenticate, sending FINGERPRINT_ERROR_CANCELED
@@ -218,7 +231,7 @@ typedef struct fingerprint_device {
      * Function return: 0 if fingerprint template(s) can be successfully deleted
      *                  or a negative number in case of error, generally from the errno.h set.
      */
-    int (*remove)(struct fingerprint_device* dev, uint32_t* fids, uint32_t count);
+    int (*remove)(struct fingerprint_device* dev, uint32_t gid, uint32_t fid);
 
     /*
      * Restricts the HAL operation to a set of fingerprints belonging to a
@@ -237,7 +250,7 @@ typedef struct fingerprint_device {
      * Function return: 0 on success
      *                  or a negative number in case of error, generally from the errno.h set.
      */
-    int (*authenticate)(struct fingerprint_device* dev, uint64_t operation_id);
+    int (*authenticate)(struct fingerprint_device* dev, uint64_t operation_id, uint32_t gid);
 
     /*
      * Fingerprint generate challenge:

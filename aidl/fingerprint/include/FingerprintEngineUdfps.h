@@ -17,8 +17,9 @@
 
 #pragma once
 #include "FingerprintEngine.h"
+#include "UdfpsHandler.h"
 
-using namespace ::aidl::android::hardware::biometrics::common;
+namespace common = ::aidl::android::hardware::biometrics::common;
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 
@@ -28,7 +29,7 @@ class FingerprintEngineUdfps : public FingerprintEngine {
     static constexpr int32_t uiReadyTimeoutInMs = 5000;
 
     FingerprintEngineUdfps();
-    ~FingerprintEngineUdfps() {}
+    ~FingerprintEngineUdfps();
 
     ndk::ScopedAStatus onPointerDownImpl(int32_t pointerId, int32_t x, int32_t y, float minor,
                                          float major) override;
@@ -53,6 +54,8 @@ class FingerprintEngineUdfps : public FingerprintEngine {
   private:
     int64_t mPointerDownTime;
     int64_t mUiReadyTime;
+    UdfpsHandlerFactory* mUdfpsHandlerFactory;
+    UdfpsHandler* mUdfpsHandler;
 };
 
 }  // namespace aidl::android::hardware::biometrics::fingerprint

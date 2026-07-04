@@ -33,14 +33,33 @@ using namespace ::android::fingerprint::motorola;
 namespace aidl::android::hardware::biometrics::fingerprint {
 
 FingerprintEngineUdfps::FingerprintEngineUdfps()
-    : FingerprintEngine(), mPointerDownTime(0), mUiReadyTime(0) {}
+    : FingerprintEngine(), mPointerDownTime(0), mUiReadyTime(0), mUdfpsHandlerFactory(nullptr), mUdfpsHandler(nullptr) {
+    mUdfpsHandlerFactory = getUdfpsHandlerFactory();
+    if (!mUdfpsHandlerFactory) {
+        LOG(ERROR) << "Can't get UdfpsHandlerFactory";
+    } else {
+        mUdfpsHandler = mUdfpsHandlerFactory->create();
+        if (!mUdfpsHandler) {
+            LOG(ERROR) << "Can't create UdfpsHandler";
+        }
+    }
+}
 
-ndk::ScopedAStatus FingerprintEngineUdfps::onPointerDownImpl(int32_t /*pointerId*/, int32_t /*x*/,
-                                                             int32_t /*y*/, float /*minor*/,
-                                                             float /*major*/) {
+FingerprintEngineUdfps::~FingerprintEngineUdfps() {
+    if (mUdfpsHandler && mUdfpsHandlerFactory) {
+        mUdfpsHandlerFactory->destroy(mUdfpsHandler);
+    }
+}
+
+ndk::ScopedAStatus FingerprintEngineUdfps::onPointerDownImpl(int32_t /*pointerId*/, int32_t x,
+                                                             int32_t y, float minor,
+                                                             float major) {
     BEGIN_OP(0);
     // verify whetehr touch coordinates/area matching sensor location ?
     mPointerDownTime = Util::getSystemNanoTime();
+    if (mUdfpsHandler) {
+        mUdfpsHandler->onFingerDown(x, y, minor, major);
+    }
     if (Fingerprint::cfg().get<bool>("control_illumination")) {
         fingerDownAction();
     }
@@ -51,16 +70,25 @@ ndk::ScopedAStatus FingerprintEngineUdfps::onPointerUpImpl(int32_t /*pointerId*/
     BEGIN_OP(0);
     mUiReadyTime = 0;
     mPointerDownTime = 0;
+    if (mUdfpsHandler) {
+        mUdfpsHandler->onFingerUp();
+    }
     return ndk::ScopedAStatus::ok();
 }
 
 ndk::ScopedAStatus FingerprintEngineUdfps::onUiReadyImpl() {
     BEGIN_OP(0);
-
-    if (Util::hasElapsed(mPointerDownTime, uiReadyTimeoutInMs * 100)) {
-        LOG(ERROR) << "onUiReady() arrives too late after onPointerDown()";
-    } else {
-        fingerDownAction();
+    if (mUdfpsHandler) {
+        std::vector<SensorLocation> locations;
+        getSensorLocation(locations);
+        if (!locations.empty()) {
+            mUdfpsHandler->onFingerDown(locations[0].sensorLocationX,
+                                        locations[0].sensorLocationY,
+                                        locations[0].sensorRadius,
+                                        locations[0].sensorRadius);
+        } else {
+            mUdfpsHandler->onFingerDown(540, 2164, 98, 98);
+        }
     }
     return ndk::ScopedAStatus::ok();
 }
@@ -77,6 +105,9 @@ void FingerprintEngineUdfps::updateContext(WorkMode mode, ISessionCallback* cb,
     FingerprintEngine::updateContext(mode, cb, cancel, operationId, hat);
     mPointerDownTime = 0;
     mUiReadyTime = 0;
+    if (mUdfpsHandler) {
+        mUdfpsHandler->cancel();
+    }
 }
 
 }  // namespace aidl::android::hardware::biometrics::fingerprint

@@ -20,7 +20,7 @@
 #include "Fingerprint.h"
 #include "util/Util.h"
 
-using namespace ::android::fingerprint::nothing;
+using namespace ::android::fingerprint::motorola;
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 

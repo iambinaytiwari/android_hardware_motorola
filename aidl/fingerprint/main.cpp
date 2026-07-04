@@ -18,6 +18,7 @@
 #include "Fingerprint.h"
 
 #include <android-base/logging.h>
+#include <android-base/properties.h>
 #include <android/binder_manager.h>
 #include <android/binder_process.h>
 
@@ -33,11 +34,17 @@ int main() {
         auto binder = hal->asBinder();
         binder_status_t status =
                 AServiceManager_registerLazyService(binder.get(), instance.c_str());
-        CHECK_EQ(status, STATUS_OK);
-        LOG(INFO) << "started IFingerprint/default";
-        AServiceManager_forceLazyServicesPersist(true);
+        if (status == STATUS_OK) {
+            LOG(INFO) << "started IFingerprint/default";
+            AServiceManager_forceLazyServicesPersist(true);
+            android::base::SetProperty("vendor.hw.fingerprint.status", "ok");
+        } else {
+            LOG(ERROR) << "Fail to register as Service !!!";
+            android::base::SetProperty("vendor.hw.fingerprint.status", "fail");
+        }
     } else {
         LOG(ERROR) << "Fingerprint HAL is not connected";
+        android::base::SetProperty("vendor.hw.fingerprint.status", "fail");
     }
 
     ABinderProcess_joinThreadPool();

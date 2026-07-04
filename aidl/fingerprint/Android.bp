@@ -43,6 +43,7 @@ cc_library_static {
         "android.hardware.biometrics.common.util",
         "android.hardware.biometrics.common.config",
         "android.hardware.keymaster-V4-ndk",
+        "libudfpshandlerfactory.motorola",
     ],
 }
 
@@ -52,24 +53,19 @@ cc_binary {
     vendor: true,
     relative_install_path: "hw",
     init_rc: ["fingerprint-motorola.rc"],
-    vintf_fragment_modules: ["android.hardware.biometrics.fingerprint-service.motorola.vintf"],
+    vintf_fragments: ["fingerprint-motorola.xml"],
     local_include_dirs: ["include"],
     srcs: [
     ],
     stl: "c++_static",
     shared_libs: [
         "libbinder_ndk",
+        "libhardware",
         "liblog",
     ],
     whole_static_libs: [
         "android.hardware.biometrics.fingerprint-service.motorola.lib",
     ],
-}
-
-vintf_fragment {
-    name: "android.hardware.biometrics.fingerprint-service.motorola.vintf",
-    src: "fingerprint-motorola.xml",
-    vendor: true,
 }
 
 sysprop_library {

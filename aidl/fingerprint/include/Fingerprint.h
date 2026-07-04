@@ -37,7 +37,8 @@ class Fingerprint : public BnFingerprint {
     ndk::ScopedAStatus createSession(int32_t sensorId, int32_t userId,
                                      const std::shared_ptr<ISessionCallback>& cb,
                                      std::shared_ptr<ISession>* out) override;
-    bool connected() { return mEngine != nullptr; }
+    bool connected() { return mEngine != nullptr && mEngine->isDeviceReady(); }
+    static void notify(const fingerprint_msg_t* msg);
 
     static FingerprintConfig& cfg() {
         static FingerprintConfig* cfg = nullptr;

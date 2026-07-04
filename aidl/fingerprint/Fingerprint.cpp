@@ -25,15 +25,11 @@
 #include <android-base/logging.h>
 #include <android-base/stringprintf.h>
 
-using namespace ::android::fingerprint::nothing;
+using namespace ::android::fingerprint::motorola;
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 namespace {
 constexpr size_t MAX_WORKER_QUEUE_SIZE = 5;
-constexpr int SENSOR_ID = 5;
-constexpr common::SensorStrength SENSOR_STRENGTH = common::SensorStrength::STRONG;
-constexpr int MAX_ENROLLMENTS_PER_USER = 5;
-constexpr bool SUPPORTS_NAVIGATION_GESTURES = true;
 constexpr char HW_COMPONENT_ID[] = "fingerprintSensor";
 constexpr char HW_VERSION[] = "vendor/model/revision";
 constexpr char FW_VERSION[] = "1.01";
@@ -43,7 +39,10 @@ constexpr char SW_VERSION[] = "vendor/version/revision";
 
 }  // namespace
 
+Fingerprint* sInstance = nullptr;
+
 Fingerprint::Fingerprint() : mWorker(MAX_WORKER_QUEUE_SIZE) {
+    sInstance = this;
     std::string sensorTypeProp = Fingerprint::cfg().get<std::string>("type");
     if (sensorTypeProp == "" || sensorTypeProp == "default" || sensorTypeProp == "udfps") {
         mSensorType = FingerprintSensorType::UNDER_DISPLAY_OPTICAL;
@@ -84,6 +83,15 @@ ndk::ScopedAStatus Fingerprint::getSensorProps(std::vector<SensorProps>* out) {
     *out = {{commonProps, mSensorType, sensorLocation, navigationGesture, detectInteraction,
              displayTouch, controlIllumination, std::nullopt}};
     return ndk::ScopedAStatus::ok();
+}
+
+void Fingerprint::notify(const fingerprint_msg_t* msg) {
+    LOG(INFO) << "Fingerprint::notify: msg type = " << msg->type;
+    if (sInstance && sInstance->mSession && !sInstance->mSession->isClosed()) {
+        sInstance->mSession->notify(msg);
+    } else {
+        LOG(WARNING) << "Fingerprint::notify: dropped message because session is inactive";
+    }
 }
 
 ndk::ScopedAStatus Fingerprint::createSession(int32_t sensorId, int32_t userId,

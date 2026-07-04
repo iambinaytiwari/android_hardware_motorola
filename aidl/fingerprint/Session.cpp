@@ -65,7 +65,6 @@ void Session::scheduleStateOrCrash(SessionState state) {
 }
 
 void Session::enterStateOrCrash(SessionState state) {
-    CHECK(mScheduledState == state);
     mCurrentState = state;
     mScheduledState = SessionState::IDLING;
 }
@@ -242,6 +241,7 @@ ndk::ScopedAStatus Session::close() {
     // TODO(b/166800618): call enterIdling from the terminal callbacks and restore this check.
     // CHECK(mCurrentState == SessionState::IDLING) << "Can't close a non-idling session.
     // Crashing.";
+    mEngine->isLockoutTimerAborted = true;  // Cancel any pending lockout timer
     mCurrentState = SessionState::CLOSED;
     mCb->onSessionClosed();
     AIBinder_DeathRecipient_delete(mDeathRecipient);
@@ -322,8 +322,13 @@ Error Session::VendorErrorFilter(int32_t error, int32_t* vendorCode) {
 
     switch (error) {
         case FINGERPRINT_ERROR_HW_UNAVAILABLE:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 1:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 2:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 3:
             return Error::HW_UNAVAILABLE;
         case FINGERPRINT_ERROR_UNABLE_TO_PROCESS:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 4:
+        case FINGERPRINT_ERROR_VENDOR_BASE + 5:
             return Error::UNABLE_TO_PROCESS;
         case FINGERPRINT_ERROR_TIMEOUT:
             return Error::TIMEOUT;
@@ -365,7 +370,13 @@ AcquiredInfo Session::VendorAcquiredFilter(int32_t info, int32_t* vendorCode) {
         case FINGERPRINT_ACQUIRED_TOO_SLOW:
             return AcquiredInfo::TOO_SLOW;
         case FINGERPRINT_ACQUIRED_TOO_FAST:
+        case FINGERPRINT_ACQUIRED_VENDOR_BASE + 8:
             return AcquiredInfo::TOO_FAST;
+        case FINGERPRINT_ACQUIRED_VENDOR_BASE + 5:
+        case FINGERPRINT_ACQUIRED_VENDOR_BASE + 6:
+        case FINGERPRINT_ACQUIRED_VENDOR_BASE + 7:
+            *vendorCode = info - FINGERPRINT_ACQUIRED_VENDOR_BASE;
+            return AcquiredInfo::VENDOR;
         default:
             if (info >= FINGERPRINT_ACQUIRED_VENDOR_BASE) {
                 // vendor specific code.
@@ -379,7 +390,13 @@ AcquiredInfo Session::VendorAcquiredFilter(int32_t info, int32_t* vendorCode) {
 }
 
 void Session::notify(const fingerprint_msg_t* msg) {
-    // const uint64_t devId = reinterpret_cast<uint64_t>(mDevice);
+    fingerprint_msg_t msgCopy = *msg;
+    mWorker->schedule(Callable::from([this, msgCopy]() mutable {
+        processHalMessage(&msgCopy);
+    }));
+}
+
+void Session::processHalMessage(const fingerprint_msg_t* msg) {
     switch (msg->type) {
         case FINGERPRINT_ERROR: {
             int32_t vendorCode = 0;
@@ -392,18 +409,19 @@ void Session::notify(const fingerprint_msg_t* msg) {
             AcquiredInfo result =
                     VendorAcquiredFilter(msg->data.acquired.acquired_info, &vendorCode);
             LOG(INFO) << "onAcquired(" << static_cast<int>(result) << ", " << vendorCode << ")";
-            mEngine->onAcquired(static_cast<int32_t>(result), vendorCode);
-            // don't process vendor messages further since frameworks try to disable
-            // udfps display mode on vendor acquired messages but our sensors send a
-            // vendor message during processing...
-            if (result != AcquiredInfo::VENDOR) {
+            // Filter specific vendor codes that cause framework to incorrectly disable
+            // UDFPS display mode during processing. Pass through other vendor messages
+            // that may contain useful user feedback.
+            if (result == AcquiredInfo::VENDOR && (vendorCode >= 5 && vendorCode <= 7)) {
+                LOG(DEBUG) << "Filtering vendor acquired code " << vendorCode;
+            } else {
                 mCb->onAcquired(result, vendorCode);
             }
         } break;
         case FINGERPRINT_TEMPLATE_ENROLLING: {
-            LOG(INFO) << "onEnrollResult(fid=" << msg->data.enroll.finger
+            LOG(INFO) << "onEnrollResult(fid=" << msg->data.enroll.finger.fid
                       << ", rem=" << msg->data.enroll.samples_remaining << ")";
-            mCb->onEnrollmentProgress(msg->data.enroll.finger, msg->data.enroll.samples_remaining);
+            mCb->onEnrollmentProgress(msg->data.enroll.finger.fid, msg->data.enroll.samples_remaining);
         } break;
         case FINGERPRINT_TEMPLATE_REMOVED: {
             std::vector<int32_t> enrollments;
@@ -411,7 +429,7 @@ void Session::notify(const fingerprint_msg_t* msg) {
             for (unsigned int i = 0; i < NUM_FINGERS; i++) {
                 int32_t fid = msg->data.removed.fingers[i].fid;
                 if (!fid) break;
-                ALOGD("onRemove(fid=%d)", fid);
+                LOG(DEBUG) << "onRemove(fid=" << fid << ")";
                 enrollments.push_back(fid);
             }
             mCb->onEnrollmentsRemoved(enrollments);
@@ -438,29 +456,29 @@ void Session::notify(const fingerprint_msg_t* msg) {
             for (unsigned int i = 0; i < NUM_FINGERS; i++) {
                 int32_t fid = msg->data.enumerated.fingers[i].fid;
                 if (!fid) break;
-                ALOGD("onEnumerate(fid=%d)", fid);
+                LOG(DEBUG) << "onEnumerate(fid=" << fid << ")";
                 enrollments.push_back(fid);
             }
             mCb->onEnrollmentsEnumerated(enrollments);
         } break;
-        case FINGERPRINT_CHALLENGE_GENERATED: {
-            int64_t challenge = msg->data.extend.data;
+        case FINGERPRINT_GENERATE_CHALLENGE: {
+            int64_t challenge = msg->data.data;
             LOG(INFO) << "onChallengeGenerated: " << challenge;
             mCb->onChallengeGenerated(challenge);
         } break;
-        case FINGERPRINT_CHALLENGE_REVOKED: {
-            int64_t challenge = msg->data.extend.data;
+        case FINGERPRINT_REVOKE_CHALLENGE: {
+            int64_t challenge = msg->data.data;
             LOG(INFO) << "onChallengeRevoked: " << challenge;
             mCb->onChallengeRevoked(challenge);
         } break;
-        case FINGERPRINT_AUTHENTICATOR_ID_RETRIEVED: {
-            int auth_id = msg->data.extend.data;
+        case FINGERPRINT_GET_AUTHENTICATOR_ID: {
+            int auth_id = msg->data.data;
             LOG(INFO) << "onAuthenticatorIDRetrieved: " << auth_id;
             mEngine->onPointerUpImpl(0);
             mCb->onAuthenticatorIdRetrieved(auth_id);
         } break;
-        case FINGERPRINT_AUTHENTICATOR_ID_INVALIDATED: {
-            int64_t new_auth_id = msg->data.extend.data;
+        case FINGERPRINT_INVALIDATE_AUTHENTICATOR_ID: {
+            int64_t new_auth_id = msg->data.data;
             LOG(INFO) << "onAuthenticatorIDInvalidated, new auth id: " << new_auth_id;
             mCb->onAuthenticatorIdInvalidated(new_auth_id);
         } break;

@@ -33,14 +33,18 @@
 #include "LockoutTracker.h"
 
 #include <fstream>
-#include "fingerprint-nothing.h"
+#include <atomic>
+#include "fingerprint-motorola.h"
 
-using namespace ::aidl::android::hardware::biometrics::common;
+namespace common = ::aidl::android::hardware::biometrics::common;
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 
+class Session;
+
 // A fingerprint engine that is backed by system properties instead of hardware.
 class FingerprintEngine {
+    friend class Session;
   public:
     FingerprintEngine();
     virtual ~FingerprintEngine() {}
@@ -79,6 +83,7 @@ class FingerprintEngine {
 
     WorkMode getWorkMode() { return mWorkMode; }
     void notifyFingerdown() { mFingerIsDown = true; }
+    bool isDeviceReady() { return mDevice != nullptr; }
 
     virtual std::string toString() const {
         std::ostringstream os;
@@ -96,17 +101,18 @@ class FingerprintEngine {
 
     bool onEnrollFingerDown(ISessionCallback* cb, const keymaster::HardwareAuthToken& hat,
                             const std::future<void>& cancel);
-    bool onAuthenticateFingerDown(ISessionCallback* cb, int64_t, const std::future<void>& cancel);
+    bool onAuthenticateFingerDown(ISessionCallback* cb, int64_t operationId, const std::future<void>& cancel);
     bool onDetectInteractFingerDown(ISessionCallback* cb, const std::future<void>& cancel);
 
-    WorkMode mWorkMode;
-    ISessionCallback* mCb;
+    WorkMode mWorkMode = WorkMode::kIdle;
+    ISessionCallback* mCb = nullptr;
     keymaster::HardwareAuthToken mHat;
     std::future<void> mCancel;
-    int64_t mOperationId;
-    bool mFingerIsDown;
+    int64_t mOperationId = 0;
+    bool mFingerIsDown = false;
 
-    fingerprint_device_t* mDevice;
+    fingerprint_device_t* mDevice = nullptr;
+    int mUserId;
 
   private:
     // static ndk::ScopedAStatus ErrorFilter(int32_t error);
@@ -129,9 +135,9 @@ class FingerprintEngine {
   protected:
     // lockout timer
     void lockoutTimerExpired(ISessionCallback* cb);
-    bool isLockoutTimerSupported;
-    bool isLockoutTimerStarted;
-    bool isLockoutTimerAborted;
+    bool isLockoutTimerSupported = true;
+    std::atomic<bool> isLockoutTimerStarted{false};
+    std::atomic<bool> isLockoutTimerAborted{false};
 
   public:
     void startLockoutTimer(int64_t timeout, ISessionCallback* cb);

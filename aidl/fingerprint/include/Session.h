@@ -109,8 +109,10 @@ class Session : public BnSession {
     binder_status_t linkToDeath(AIBinder* binder);
 
     bool isClosed();
+    void notify(const fingerprint_msg_t* msg);
 
   private:
+    void processHalMessage(const fingerprint_msg_t* msg);
     // static ndk::ScopedAStatus ErrorFilter(int32_t error);
     Error VendorErrorFilter(int32_t error, int32_t* vendorCode);
     AcquiredInfo VendorAcquiredFilter(int32_t info, int32_t* vendorCode);

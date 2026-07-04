@@ -23,7 +23,7 @@
 
 #include <fingerprint.sysprop.h>
 
-using namespace ::android::fingerprint::nothing;
+using namespace ::android::fingerprint::motorola;
 
 namespace aidl::android::hardware::biometrics::fingerprint {
 
@@ -56,7 +56,7 @@ CREATE_GETTER_SETTER_WRAPPER(operation_detect_interaction_error, OptInt32)
 CREATE_GETTER_SETTER_WRAPPER(operation_detect_interaction_latency, OptIntVec)
 CREATE_GETTER_SETTER_WRAPPER(operation_detect_interaction_duration, OptInt32)
 CREATE_GETTER_SETTER_WRAPPER(operation_detect_interaction_acquired, OptString)
-CREATE_GETTER_SETTER_WRAPPER(max_enrollments, OptBool)
+CREATE_GETTER_SETTER_WRAPPER(max_enrollments, OptInt32)
 CREATE_GETTER_SETTER_WRAPPER(navigation_gesture, OptBool)
 CREATE_GETTER_SETTER_WRAPPER(detect_interaction, OptBool)
 CREATE_GETTER_SETTER_WRAPPER(display_touch, OptBool)
