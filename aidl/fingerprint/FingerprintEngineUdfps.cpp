@@ -60,6 +60,11 @@ ndk::ScopedAStatus FingerprintEngineUdfps::onPointerDownImpl(int32_t /*pointerId
     if (mUdfpsHandler) {
         mUdfpsHandler->onFingerDown(x, y, minor, major);
     }
+    if (mIsRbs) {
+        if (mRbsDevice && mRbsDevice->rbs_extra_api) {
+            mRbsDevice->rbs_extra_api(1, nullptr, 0, nullptr, nullptr);
+        }
+    }
     if (Fingerprint::cfg().get<bool>("control_illumination")) {
         fingerDownAction();
     }
@@ -72,6 +77,11 @@ ndk::ScopedAStatus FingerprintEngineUdfps::onPointerUpImpl(int32_t /*pointerId*/
     mPointerDownTime = 0;
     if (mUdfpsHandler) {
         mUdfpsHandler->onFingerUp();
+    }
+    if (mIsRbs) {
+        if (mRbsDevice && mRbsDevice->rbs_extra_api) {
+            mRbsDevice->rbs_extra_api(2, nullptr, 0, nullptr, nullptr);
+        }
     }
     return ndk::ScopedAStatus::ok();
 }

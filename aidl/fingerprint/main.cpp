@@ -41,10 +41,12 @@ int main() {
         } else {
             LOG(ERROR) << "Fail to register as Service !!!";
             android::base::SetProperty("vendor.hw.fingerprint.status", "fail");
+            return EXIT_FAILURE;
         }
     } else {
         LOG(ERROR) << "Fingerprint HAL is not connected";
         android::base::SetProperty("vendor.hw.fingerprint.status", "fail");
+        return EXIT_FAILURE;
     }
 
     ABinderProcess_joinThreadPool();

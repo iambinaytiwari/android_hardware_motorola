@@ -33,6 +33,7 @@ cc_library_static {
         "libbinder_ndk",
         "libhardware",
         "liblog",
+        "libdl",
     ],
     whole_static_libs: [
         "libandroid.hardware.biometrics.fingerprint.MotorolaProps",
@@ -62,6 +63,7 @@ cc_binary {
         "libbinder_ndk",
         "libhardware",
         "liblog",
+        "libdl",
     ],
     whole_static_libs: [
         "android.hardware.biometrics.fingerprint-service.motorola.lib",

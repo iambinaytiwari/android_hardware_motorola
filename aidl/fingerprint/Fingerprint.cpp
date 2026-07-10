@@ -47,6 +47,9 @@ Fingerprint::Fingerprint() : mWorker(MAX_WORKER_QUEUE_SIZE) {
     if (sensorTypeProp == "" || sensorTypeProp == "default" || sensorTypeProp == "udfps") {
         mSensorType = FingerprintSensorType::UNDER_DISPLAY_OPTICAL;
         mEngine = std::make_unique<FingerprintEngineUdfps>();
+    } else if (sensorTypeProp == "rear" || sensorTypeProp == "side") {
+        mSensorType = (sensorTypeProp == "side") ? FingerprintSensorType::POWER_BUTTON : FingerprintSensorType::REAR;
+        mEngine = std::make_unique<FingerprintEngine>();
     } else {
         mSensorType = FingerprintSensorType::UNKNOWN;
         mEngine = NULL;
