@@ -177,6 +177,7 @@ ndk::ScopedAStatus Session::enumerateEnrollments() {
 
     mWorker->schedule(Callable::from([this] {
         enterStateOrCrash(SessionState::ENUMERATING_ENROLLMENTS);
+        mAccumulatedEnrollments.clear();
         mEngine->enumerateEnrollmentsImpl(mCb.get());
         enterIdling();
     }));
@@ -190,6 +191,7 @@ ndk::ScopedAStatus Session::removeEnrollments(const std::vector<int32_t>& enroll
 
     mWorker->schedule(Callable::from([this, enrollmentIds] {
         enterStateOrCrash(SessionState::REMOVING_ENROLLMENTS);
+        mAccumulatedRemoved.clear();
         mEngine->removeEnrollmentsImpl(mCb.get(), enrollmentIds);
         enterIdling();
     }));
@@ -424,15 +426,31 @@ void Session::processHalMessage(const fingerprint_msg_t* msg) {
             mCb->onEnrollmentProgress(msg->data.enroll.finger.fid, msg->data.enroll.samples_remaining);
         } break;
         case FINGERPRINT_TEMPLATE_REMOVED: {
-            std::vector<int32_t> enrollments;
-            enrollments.reserve(NUM_FINGERS);
-            for (unsigned int i = 0; i < NUM_FINGERS; i++) {
-                int32_t fid = msg->data.removed.fingers[i].fid;
-                if (!fid) break;
-                LOG(DEBUG) << "onRemove(fid=" << fid << ")";
-                enrollments.push_back(fid);
+            // Goodix HAL on some Motorola devices sends all removed fingers in a single array.
+            // Check if the second element has a valid finger ID to detect this format.
+            if (msg->data.removed.fingers[1].fid != 0) {
+                std::vector<int32_t> enrollments;
+                for (unsigned int i = 0; i < NUM_FINGERS; i++) {
+                    int32_t fid = msg->data.removed.fingers[i].fid;
+                    if (!fid) break;
+                    LOG(DEBUG) << "onRemove(fid=" << fid << ")";
+                    enrollments.push_back(fid);
+                }
+                mCb->onEnrollmentsRemoved(enrollments);
+            } else {
+                int32_t fid = msg->data.removed.fingers[0].fid;
+                uint32_t remaining = msg->data.removed.fingers[1].gid;
+
+                if (fid != 0) {
+                    mAccumulatedRemoved.push_back(fid);
+                    LOG(DEBUG) << "onRemove accumulated(fid=" << fid << ", remaining=" << remaining << ")";
+                }
+
+                if (remaining == 0) {
+                    mCb->onEnrollmentsRemoved(mAccumulatedRemoved);
+                    mAccumulatedRemoved.clear();
+                }
             }
-            mCb->onEnrollmentsRemoved(enrollments);
         } break;
         case FINGERPRINT_AUTHENTICATED: {
             LOG(INFO) << "onAuthenticated(fid=" << msg->data.authenticated.finger.fid << ")";
@@ -451,15 +469,31 @@ void Session::processHalMessage(const fingerprint_msg_t* msg) {
             mEngine->onPointerUpImpl(0);
         } break;
         case FINGERPRINT_TEMPLATE_ENUMERATING: {
-            std::vector<int32_t> enrollments;
-            enrollments.reserve(NUM_FINGERS);
-            for (unsigned int i = 0; i < NUM_FINGERS; i++) {
-                int32_t fid = msg->data.enumerated.fingers[i].fid;
-                if (!fid) break;
-                LOG(DEBUG) << "onEnumerate(fid=" << fid << ")";
-                enrollments.push_back(fid);
+            // Goodix HAL on some Motorola devices sends all enumerated fingers in a single array.
+            // Check if the second element has a valid finger ID to detect this format.
+            if (msg->data.enumerated.fingers[1].fid != 0) {
+                std::vector<int32_t> enrollments;
+                for (unsigned int i = 0; i < NUM_FINGERS; i++) {
+                    int32_t fid = msg->data.enumerated.fingers[i].fid;
+                    if (!fid) break;
+                    LOG(DEBUG) << "onEnumerate(fid=" << fid << ")";
+                    enrollments.push_back(fid);
+                }
+                mCb->onEnrollmentsEnumerated(enrollments);
+            } else {
+                int32_t fid = msg->data.enumerated.fingers[0].fid;
+                uint32_t remaining = msg->data.enumerated.fingers[1].gid;
+
+                if (fid != 0) {
+                    mAccumulatedEnrollments.push_back(fid);
+                    LOG(DEBUG) << "onEnumerate accumulated(fid=" << fid << ", remaining=" << remaining << ")";
+                }
+
+                if (remaining == 0) {
+                    mCb->onEnrollmentsEnumerated(mAccumulatedEnrollments);
+                    mAccumulatedEnrollments.clear();
+                }
             }
-            mCb->onEnrollmentsEnumerated(enrollments);
         } break;
         case FINGERPRINT_GENERATE_CHALLENGE: {
             int64_t challenge = msg->data.data;

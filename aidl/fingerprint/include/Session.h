@@ -155,6 +155,9 @@ class Session : public BnSession {
 
     // Binder death handler.
     AIBinder_DeathRecipient* mDeathRecipient;
+
+    std::vector<int32_t> mAccumulatedEnrollments;
+    std::vector<int32_t> mAccumulatedRemoved;
 };
 
 }  // namespace aidl::android::hardware::biometrics::fingerprint
